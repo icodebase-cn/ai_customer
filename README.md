@@ -33,7 +33,7 @@
 ## 项目结构
 
 ```
-AIGCRobot/
+ai_customer/
 ├── api/
 │   └── main.py                 # FastAPI主应用
 ├── knowledge_base/
