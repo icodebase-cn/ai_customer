@@ -1,0 +1,11 @@
+# OpenAI API配置
+AIQIANJI_API_KEY=your_AIQIANJI_API_KEY_here
+AIQIANJI_BASE_URL=https://aiqianji.cn/v1
+
+# 系统配置
+DEBUG=True
+LOG_LEVEL=INFO
+
+# 服务器配置
+HOST=0.0.0.0
+PORT=8000

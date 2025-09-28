@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多语言智能客服</title>
+    <!-- Fallback to Cloudflare CDN for Tailwind CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            height: calc(100vh - 280px);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .message {
+            animation: slideInUp 0.4s ease-out;
+        }
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .typing-indicator {
+            display: none;
+        }
+        .typing-indicator.show {
+            display: flex;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #9CA3AF;
+            margin: 0 2px;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .message-bubble {
+            position: relative;
+            border-radius: 18px;
+            padding: 12px 16px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        .message-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            width: 20px;
+            height: 20px;
+        }
+        .user-message {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+        }
+        .user-message::before {
+            right: -10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 0 0 0 20px;
+        }
+        .ai-message {
+            background: white;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .ai-message::before {
+            left: -10px;
+            background: white;
+            border-radius: 0 0 20px 0;
+        }
+        .quick-question {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .quick-question:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+        .floating-action {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .scroll-to-bottom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .scroll-to-bottom:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .conversation-context {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #666;
+            border-left: 3px solid #667eea;
+        }
+
+        /* 深色主题样式 */
+        .dark {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        .dark .chat-container {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        .dark .bg-white {
+            background-color: #1e293b;
+        }
+
+        .dark .text-gray-700 {
+            color: #e2e8f0;
+        }
+
+        .dark .text-gray-600 {
+            color: #cbd5e1;
+        }
+
+        .dark .text-gray-500 {
+            color: #94a3b8;
+        }
+
+        .dark .border-gray-100 {
+            border-color: #334155;
+        }
+
+        .dark .border-gray-200 {
+            border-color: #475569;
+        }
+
+        .dark .border-gray-300 {
+            border-color: #64748b;
+        }
+
+        .dark .ai-message {
+            background: #334155;
+            color: #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .dark .ai-message::before {
+            background: #334155;
+        }
+
+        .dark .conversation-context {
+            background: rgba(51, 65, 85, 0.9);
+            color: #cbd5e1;
+        }
+
+        .dark .bg-gray-50 {
+            background-color: #1e293b;
+        }
+
+        .dark .bg-gray-100 {
+            background-color: #334155;
+        }
+
+        .dark .shadow-2xl {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .dark .shadow-lg {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .dark .shadow-md {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .dark .shadow-sm {
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .dark .hover\:border-blue-300:hover {
+            border-color: #60a5fa;
+        }
+
+        .dark .hover\:shadow-lg:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+        }
+
+        .dark .focus\:ring-blue-500:focus {
+            --tw-ring-color: #3b82f6;
+        }
+
+        .dark .focus\:border-transparent:focus {
+            border-color: transparent;
+        }
+
+        .dark .border-gray-300 {
+            border-color: #64748b;
+        }
+
+        .dark .text-gray-400 {
+            color: #94a3b8;
+        }
+
+        .dark .text-red-500 {
+            color: #ef4444;
+        }
+
+        .dark .text-red-700 {
+            color: #b91c1c;
+        }
+
+        .dark .text-green-500 {
+            color: #10b981;
+        }
+
+        .dark .text-blue-500 {
+            color: #3b82f6;
+        }
+
+        .dark .text-purple-500 {
+            color: #8b5cf6;
+        }
+
+        .dark .text-green-400 {
+            color: #34d399;
+        }
+
+        .dark .text-emerald-400 {
+            color: #6ee7b7;
+        }
+
+        .dark .text-orange-400 {
+            color: #fb923c;
+        }
+
+        .dark .text-red-400 {
+            color: #f87171;
+        }
+
+        .dark .text-pink-400 {
+            color: #f472b6;
+        }
+
+        .dark .text-cyan-400 {
+            color: #22d3ee;
+        }
+
+        .dark .text-yellow-500 {
+            color: #eab308;
+        }
+
+        .dark .bg-gradient-to-br {
+            background: linear-gradient(to bottom right, #1a1a2e, #16213e);
+        }
+
+        .dark .from-blue-50 {
+            --tw-gradient-from: #1a1a2e;
+            --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(26, 26, 46, 0));
+        }
+
+        .dark .to-purple-50 {
+            --tw-gradient-to: #16213e;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen">
+    <div class="min-h-screen">
+        <!-- 头部 -->
+        <header class="gradient-bg text-white shadow-xl">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-robot text-2xl"></i>
+                        </div>
+                        <div>
+                            <h1 id="headerTitle" class="text-2xl font-bold">多语言智能客服</h1>
+                            <p id="headerSubtitle" class="text-sm opacity-90">AI驱动的问答助手</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2 bg-white bg-opacity-20 rounded-full px-4 py-2">
+                            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span id="onlineStatusText" class="text-sm"></span>
+                        </div>
+                        <button onclick="toggleTheme()" class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-30 transition-all">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        <button onclick="showSettingsModal()" class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-30 transition-all" title="设置">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主要内容 -->
+        <div class="container mx-auto px-4 py-6">
+            <div class="max-w-5xl mx-auto">
+                <!-- 聊天区域 -->
+                <div class="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+                    <!-- 聊天头部 -->
+                    <div class="gradient-bg text-white px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-headset text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-lg">智能客服助手</h3>
+                                    <p class="text-sm opacity-90">为您提供专业的咨询服务</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-3">
+                                <div class="relative">
+                                    <button id="languageButton" class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-30 transition-all" title="选择语言">
+                                        <i class="fas fa-globe"></i>
+                                    </button>
+                                    <div id="languageDropdown" class="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg py-1 hidden z-50">
+                                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="zh">中文</a>
+                                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="en">English</a>
+                                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="hi">हिंदी</a>
+                                    </div>
+                                </div>
+                                <button id="exportChatButton" onclick="exportChat()" class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-30 transition-all" title="导出聊天记录">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button id="clearChatButton" onclick="clearChat()" class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-30 transition-all" title="清空聊天">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 聊天消息区域 -->
+                    <div id="chatMessages" class="chat-container overflow-y-auto p-6 space-y-4">
+                        <div id="welcomeMessage"></div>
+                    </div>
+
+                    <!-- 输入区域 -->
+                    <div class="border-t border-gray-100 bg-gray-50 p-6">
+                        <form id="chatForm" class="space-y-4">
+                            <!-- 图片上传区域 -->
+                            <div id="imageUploadArea" class="hidden">
+                                <div class="bg-white rounded-lg border-2 border-dashed border-gray-300 p-4 text-center">
+                                    <div class="flex items-center justify-center space-x-2">
+                                        <i class="fas fa-image text-gray-400 text-xl"></i>
+                                        <span class="text-gray-600">已选择图片</span>
+                                    </div>
+                                    <div id="imagePreview" class="mt-3">
+                                        <img id="previewImg" class="max-h-32 mx-auto rounded-lg shadow-md" alt="预览图片">
+                                    </div>
+                                    <button type="button" onclick="removeImage()" class="mt-2 text-red-500 hover:text-red-700 text-sm">
+                                        <i class="fas fa-times mr-1"></i>移除图片
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 输入框和按钮 -->
+                            <div class="flex space-x-3">
+                                <!-- 图片上传按钮 -->
+                                <div class="relative">
+                                    <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="previewImage()">
+                                    <button type="button" onclick="document.getElementById('imageInput').click()"
+                                            class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl flex items-center justify-center transition-all transform hover:scale-105 shadow-lg">
+                                        <i class="fas fa-image"></i>
+                                    </button>
+                                </div>
+
+                                <!-- 文本输入 -->
+                                <div class="flex-1 relative">
+                                    <textarea id="messageInput"
+                                              placeholder="请输入您的问题，或上传图片让我帮您分析..."
+                                              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none shadow-sm"
+                                              rows="1"
+                                              onkeydown="handleKeyDown(event)"></textarea>
+                                    <div class="absolute bottom-2 right-2 text-xs text-gray-400">
+                                        <span id="charCount">0</span>/500
+                                    </div>
+                                </div>
+
+                                <!-- 发送按钮 -->
+                                <button type="submit"
+                                        class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl flex items-center justify-center transition-all transform hover:scale-105 shadow-lg">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+
+                            <!-- 输入提示 -->
+                            <div class="flex items-center justify-between text-xs text-gray-500">
+                                <div class="flex items-center space-x-4">
+                                    <span><i class="fas fa-lightbulb mr-1"></i>支持文字和图片输入</span>
+                                    <span><i class="fas fa-brain mr-1"></i>AI智能分析</span>
+                                    <span><i class="fas fa-history mr-1"></i>对话记忆</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span id="conversationCount">对话轮次: 0</span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 快速问题 -->
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-bolt text-yellow-500 mr-2"></i>
+                        常见问题
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <button onclick="askQuestion('refund_request')"
+                                class="quick-question bg-white p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all text-left group">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gradient-to-r from-red-400 to-pink-400 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <i class="fas fa-undo text-white"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">退款申请</p>
+                                    <p class="text-xs text-gray-500">如何申请退款？</p>
+                                </div>
+                            </div>
+                        </button>
+                        <button onclick="askQuestion('delivery_time')"
+                                class="quick-question bg-white p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all text-left group">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <i class="fas fa-shipping-fast text-white"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">发货时间</p>
+                                    <p class="text-xs text-gray-500">商品什么时候发货？</p>
+                                </div>
+                            </div>
+                        </button>
+                        <button onclick="askQuestion('logistics_query')"
+                                class="quick-question bg-white p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all text-left group">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-400 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <i class="fas fa-truck text-white"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">物流查询</p>
+                                    <p class="text-xs text-gray-500">如何查看物流信息？</p>
+                                </div>
+                            </div>
+                        </button>
+                        <button onclick="askQuestion('quality_issue')"
+                                class="quick-question bg-white p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all text-left group">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gradient-to-r from-orange-400 to-red-400 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <i class="fas fa-exclamation-triangle text-white"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">质量问题</p>
+                                    <p class="text-xs text-gray-500">商品有质量问题怎么办？</p>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div class="gradient-bg text-white px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-bold" id="apiSettingsTitle">API设置</h3>
+                    <button onclick="hideSettingsModal()" class="text-white hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div>
+                        <label for="apiKeyInput" class="block text-sm font-medium text-gray-700 mb-1" id="apiKeyLabel">API Key</label>
+                        <input type="password" id="apiKeyInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-placeholder="apiKeyPlaceholder">
+                    </div>
+                    <div>
+                        <label for="apiEndpointInput" class="block text-sm font-medium text-gray-700 mb-1" id="apiEndpointLabel">API地址</label>
+                        <input type="text" id="apiEndpointInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-placeholder="apiEndpointPlaceholder">
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button onclick="hideSettingsModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" id="apiCancelButton">取消</button>
+                    <button onclick="saveSettings()" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600" id="apiSaveButton">保存设置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 浮动按钮 -->
+    <div class="floating-action">
+        <button onclick="scrollToBottom()" class="scroll-to-bottom" title="滚动到底部">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentLanguage = 'zh'; // 默认中文
+
+        // 设置弹窗功能
+        function showSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            if (!modal) return;
+
+            modal.classList.remove('hidden');
+
+            // 获取输入元素
+            const apiKeyInput = document.getElementById('apiKeyInput');
+            const apiEndpointInput = document.getElementById('apiEndpointInput');
+
+            // 安全设置值
+            if (apiKeyInput) {
+                apiKeyInput.value = localStorage.getItem('apiKeyInput') || '';
+            }
+            if (apiEndpointInput) {
+                apiEndpointInput.value = localStorage.getItem('apiEndpointInput') || '';
+            }
+
+        }
+
+        function hideSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            const apiKey = document.getElementById('apiKeyInput').value;
+            const apiUrl = document.getElementById('apiEndpointInput').value;
+
+            // 发送到后端
+            fetch('/api/update-settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    apiKey: apiKey,
+                    apiUrl: apiUrl
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('保存失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 保存到localStorage
+                localStorage.setItem('apiKeyInput', apiKey);
+                localStorage.setItem('apiEndpointInput', apiUrl);
+
+                hideSettingsModal();
+                alert(translations[currentLanguage].settingsSaved);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(translations[currentLanguage].settingsSaveFailed + error.message);
+            });
+            console.log('设置已保存', {apiKey, apiUrl});
+        }
+
+        // 翻译字典
+        const translations = {
+            zh: {
+                app_title: "多语言智能客服",
+                app_subtitle: "AI驱动的问答助手",
+                chat_title: "智能客服助手",
+                online_status: "在线服务",
+                chat_subtitle: "为您提供专业的咨询服务",
+                export_title: "导出聊天记录",
+                clear_title: "清空聊天",
+                input_placeholder: "请输入您的问题，或上传图片让我帮您分析...",
+                hint_text: "支持文字和图片输入",
+                hint_ai: "AI智能分析",
+                hint_history: "对话记忆",
+                conversation_count: "对话轮次: ",
+                quick_questions: "常见问题",
+                refund_request: "退款申请",
+                refund_request_question: "如何申请退款？",
+                delivery_time: "发货时间",
+                delivery_time_question: "商品什么时候发货？",
+                logistics_query: "物流查询",
+                logistics_query_question: "如何查看物流信息？",
+                quality_issue: "质量问题",
+                quality_issue_question: "商品有质量问题怎么办？",
+                welcome_title: "👋 您好！我是您的专属企业问答助手",
+                api_key_label: "API密钥",
+                api_endpoint_label: "API端点",
+                api_key_placeholder: "输入您的API密钥",
+                api_endpoint_placeholder: "输入API端点URL",
+                cancel_button: "取消",
+                save_button: "保存设置",
+                api_settings_title: "API设置",
+                api_settings_description: "配置API连接参数",
+                settings_saved: "设置已保存并更新到服务器",
+                settings_save_failed: "保存失败: ",
+                welcome_description: "我可以为您提供全方位的咨询服务：",
+                service1: "游戏活动介绍",
+                service2: "图片分析与识别",
+                service3: "游戏规则查询",
+                service4: "售后问题处理",
+                welcome_footer: "请告诉我您需要什么帮助，我会记住我们的对话内容，为您提供连贯的服务！",
+                language_switched: "已切换至 {0}",
+                clear_confirm: "确定要清空所有聊天记录吗？",
+                clear_success: "对话历史已清空",
+                clear_fail: "清空对话历史失败，请重试",
+                no_export: "暂无聊天记录可导出",
+                user_role: "用户",
+                assistant_role: "助手",
+                conversation_start: "对话开始",
+                assistant_reply: "助手回复",
+            },
+            en: {
+                app_title: "Enterprise AI Customer Service",
+                app_subtitle: "AI-powered Q&A Assistant",
+                chat_title: "Smart Customer Service Assistant",
+                online_status: "Online Service",
+                conversation_start: "Conversation Start",
+                assistant_reply: "Assistant Reply",
+                api_settings_title: "API Settings",
+                api_settings_description: "Configure API connection parameters",
+                api_key_label: "API Key",
+                settings_modal_title: "API Settings",
+                settings_saved: "Settings saved successfully",
+                settings_save_failed: "Failed to save settings: ",
+                api_endpoint_label: "API Endpoint",
+                api_key_placeholder: "Enter API Key",
+                api_endpoint_placeholder: "Enter API Endpoint",
+                cancel_button: "Cancel",
+                save_button: "Save Settings",
+                chat_subtitle: "Professional consulting services for you",
+                export_title: "Export Chat",
+                clear_title: "Clear Chat",
+                input_placeholder: "Please enter your question, or upload an image for analysis...",
+                hint_text: "Supports text and image input",
+                hint_ai: "AI Intelligent Analysis",
+                hint_history: "Conversation History",
+                conversation_count: "Conversation Count: ",
+                quick_questions: "Frequently Asked Questions",
+                refund_request: "Refund Request",
+                refund_request_question: "How to request a refund?",
+                delivery_time: "Delivery Time",
+                delivery_time_question: "When will the goods be shipped?",
+                logistics_query: "Logistics Query",
+                logistics_query_question: "How to track logistics information?",
+                quality_issue: "Quality Issue",
+                quality_issue_question: "What to do with quality problems?",
+                welcome_title: "👋 Hello! I am your enterprise Q&A assistant",
+                welcome_description: "I can provide you with comprehensive consulting services:",
+                service1: "Game event introduction",
+                service2: "Image analysis and recognition",
+                service3: "Game rule query",
+                service4: "After-sales problem handling",
+                welcome_footer: "Please tell me what you need help with, and I will remember our conversation to provide you with consistent service!",
+                language_switched: "Switched to {0}",
+                clear_confirm: "Are you sure you want to clear all chat history?",
+                clear_success: "Conversation history cleared",
+                clear_fail: "Failed to clear conversation history, please try again",
+                no_export: "No chat history to export",
+                user_role: "User",
+                assistant_role: "Assistant"
+            },
+            hi: {
+                app_title: "एंटरप्राइज ग्राहक सेवा",
+                app_subtitle: "AI-संचालित प्रश्नोत्तर सहायक",
+                chat_title: "स्मार्ट ग्राहक सेवा सहायक",
+                online_status: "ऑनलाइन सेवा",
+                conversation_start: "वार्तालाप शुरू",
+                assistant_reply: "सहायक उत्तर",
+                api_settings_title: "एपीआई सेटिंग्स",
+                api_settings_description: "एपीआई कनेक्शन पैरामीटर कॉन्फ़िगर करें",
+                api_key_label: "एपीआई कुंजी",
+                api_endpoint_label: "एपीआई एंडपॉइंट",
+                api_key_placeholder: "एपीआई कुंजी दर्ज करें",
+                api_endpoint_placeholder: "एपीआई एंडपॉइंट दर्ज करें",
+                cancel_button: "रद्द करें",
+                save_button: "सेटिंग्स सहेजें",
+                chat_subtitle: "आपके लिए पेशेवर परामर्श सेवाएं",
+                export_title: "चैट निर्यात करें",
+                clear_title: "चैट साफ़ करें",
+                input_placeholder: "कृपया अपना प्रश्न दर्ज करें, या विश्लेषण के लिए एक छवि अपलोड करें...",
+                hint_text: "पाठ और छवि इनपुट का समर्थन करता है",
+                hint_ai: "एआई बुद्धिमान विश्लेषण",
+                hint_history: "वार्तालाप इतिहास",
+                conversation_count: "वार्तालाप संख्या: ",
+                quick_questions: "सामान्य प्रश्न",
+                refund_request: "धनवापसी अनुरोध",
+                refund_request_question: "धनवापसी अनुरोध कैसे करें?",
+                delivery_time: "शिपिंग समय",
+                delivery_time_question: "माल कब भेजा जाएगा?",
+                logistics_query: "लॉजिस्टिक्स जानकारी",
+                logistics_query_question: "लॉजिस्टिक्स जानकारी कैसे देखें?",
+                quality_issue: "गुणवत्ता समस्या",
+                quality_issue_question: "गुणवत्ता समस्याओं का क्या करें?",
+                welcome_title: "👋 नमस्ते! मैं आपका उद्यम प्रश्नोत्तर सहायक हूं",
+                welcome_description: "मैं आपको व्यापक परामर्श सेवाएं प्रदान कर सकता हूं:",
+                service1: "गेम इवेंट परिचय",
+                service2: "छवि विश्लेषण और पहचान",
+                service3: "गेम नियम प्रश्न",
+                service4: "बिक्री के बाद समस्या प्रबंधन",
+                welcome_footer: "कृपया मुझे बताएं कि आपको किस सहायता की आवश्यकता है, और मैं आपको सुसंगत सेवा प्रदान करने के लिए हमारी बातचीत को याद रखूंगा!",
+                language_switched: "{0} पर स्विच किया गया",
+                clear_confirm: "क्या आप वाकई सभी चैट इतिहास साफ़ करना चाहते हैं?",
+                clear_success: "वार्तालाप इतिहास साफ़ हो गया",
+                clear_fail: "वार्तालाप इतिहास साफ़ करने में विफल, कृपया पुनः प्रयास करें",
+                no_export: "निर्यात करने के लिए कोई चैट इतिहास नहीं",
+                user_role: "उपयोगकर्ता",
+                assistant_role: "सहायक"
+            }
+        };
+
+        // 获取当前选中的语言
+        function getCurrentLanguage() {
+            return localStorage.getItem('selectedLanguage') || 'zh';
+        }
+
+        // 更新UI文本 (不修改聊天消息)
+        function updateUIText(lang) {
+            const langData = translations[lang] || translations['zh'];
+
+            // 安全更新应用标题
+            document.querySelector('title').textContent = langData.app_title || "多语言智能客服";
+            document.getElementById('headerTitle').textContent = langData.app_title || "多语言智能客服";
+            document.getElementById('headerSubtitle').textContent = langData.app_subtitle || "AI驱动的问答助手";
+            document.getElementById('onlineStatusText').textContent = langData.online_status || "在线服务";
+
+            // 安全更新聊天头部
+            const chatTitle = document.querySelector('h3.font-bold');
+            const chatSubtitle = document.querySelector('.gradient-bg h3 + p');
+            if (chatTitle) chatTitle.textContent = langData.chat_title || "智能客服助手";
+            if (chatSubtitle) chatSubtitle.textContent = langData.chat_subtitle || "为您提供专业的咨询服务";
+
+            // 安全更新按钮标题 (使用延迟选择)
+            setTimeout(() => {
+                const exportButton = document.getElementById('exportChatButton');
+                const clearButton = document.getElementById('clearChatButton');
+                if (exportButton) exportButton.title = langData.export_title || '导出聊天记录';
+                if (clearButton) clearButton.title = langData.clear_title || '清空聊天';
+            }, 0);
+
+            // 安全更新输入区域
+            const messageInput = document.getElementById('messageInput');
+            if (messageInput) {
+                messageInput.placeholder = langData.input_placeholder || "请输入您的问题，或上传图片让我帮您分析...";
+            }
+
+            // 安全更新提示文本
+            const hints = document.querySelectorAll('.text-xs.text-gray-500 span');
+            if (hints.length > 0) hints[0].textContent = langData.hint_text || "支持文字和图片输入";
+            if (hints.length > 1) hints[1].textContent = langData.hint_ai || "AI智能分析";
+            if (hints.length > 2) hints[2].textContent = langData.hint_history || "对话记忆";
+
+            // 安全更新对话计数前缀
+            const countSpan = document.getElementById('conversationCount');
+            if (countSpan) {
+                const count = countSpan.textContent.replace(/[^0-9]/g, '');
+                countSpan.textContent = (langData.conversation_count || "对话轮次: ") + (count || '0');
+            }
+
+            // 安全更新常见问题标题
+            const quickTitle = document.querySelector('.mt-8 h3');
+            if (quickTitle) quickTitle.textContent = langData.quick_questions || "常见问题";
+
+            // 安全更新快速问题按钮
+            const buttons = document.querySelectorAll('.quick-question');
+            if (buttons.length > 0) {
+                buttons[0].querySelector('p.font-medium').textContent = langData.refund_request || "退款申请";
+                buttons[0].querySelector('p.text-xs').textContent = langData.refund_request_question || "如何申请退款？";
+
+                buttons[1].querySelector('p.font-medium').textContent = langData.delivery_time || "发货时间";
+                buttons[1].querySelector('p.text-xs').textContent = langData.delivery_time_question || "商品什么时候发货？";
+
+                buttons[2].querySelector('p.font-medium').textContent = langData.logistics_query || "物流查询";
+                buttons[2].querySelector('p.text-xs').textContent = langData.logistics_query_question || "如何查看物流信息？";
+
+                buttons[3].querySelector('p.font-medium').textContent = langData.quality_issue || "质量问题";
+                buttons[3].querySelector('p.text-xs').textContent = langData.quality_issue_question || "商品有质量问题怎么办？";
+            }
+        }
+
+        let selectedImage = null;
+        let conversationHistory = [];
+        let conversationCount = 0;
+
+        // 语言切换功能
+        const languageButton = document.getElementById('languageButton');
+        const languageDropdown = document.getElementById('languageDropdown');
+
+        if (languageButton && languageDropdown) {
+            languageButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                languageDropdown.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', function() {
+                languageDropdown.classList.add('hidden');
+            });
+
+            languageDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (e.target.tagName === 'A') {
+                    const lang = e.target.getAttribute('data-lang');
+                    setLanguage(lang);
+                    languageDropdown.classList.add('hidden');
+
+                    // 更新按钮图标
+                    if (lang === 'zh') languageButton.innerHTML = '<i class="fas fa-globe"></i>';
+                    if (lang === 'en') languageButton.innerHTML = '<i class="fas fa-language"></i>';
+                    if (lang === 'hi') languageButton.innerHTML = '<i class="fas fa-font"></i>';
+                }
+            });
+        }
+
+        // 翻译上下文消息（使用数据属性）
+        function translateMessages(lang) {
+            const langData = translations[lang] || translations['zh'];
+            const contextElements = document.querySelectorAll('.conversation-context');
+
+            contextElements.forEach(element => {
+                const contextKey = element.dataset.contextKey;
+                if (contextKey) {
+                    element.textContent = langData[contextKey] ||
+                        translations['zh'][contextKey] ||
+                        (contextKey === 'conversation_start' ? '对话开始' : '助手回复');
+                }
+            });
+        }
+
+        function setLanguage(lang) {
+            localStorage.setItem('selectedLanguage', lang);
+            const langData = translations[lang] || translations['zh'];
+
+            // Safely handle notification with fallback
+            const notificationText = langData.language_switched
+                ? langData.language_switched.replace('{0}', getLanguageName(lang))
+                : `已切换至 ${getLanguageName(lang)}`;
+
+            showNotification(notificationText, 'info');
+
+            // 更新UI文本（不修改聊天消息）
+            updateUIText(lang);
+            // 更新弹出框语言
+            console.log('当前语言:', lang);
+            console.log('翻译数据:', translations[lang]);
+
+            // 更新API设置文本
+            const apiTitle = document.getElementById('apiSettingsTitle');
+            const apiDesc = document.getElementById('apiSettingsDescription');
+            const apiKeyLabel = document.getElementById('apiKeyLabel');
+            const apiEndpointLabel = document.getElementById('apiEndpointLabel');
+            const apiKeyInput = document.getElementById('apiKeyInput');
+            const apiEndpointInput = document.getElementById('apiEndpointInput');
+            const cancelButton = document.getElementById('apiCancelButton');
+            const saveButton = document.getElementById('apiSaveButton');
+
+            if (apiTitle) apiTitle.textContent = langData.api_settings_title || "API设置";
+            if (apiDesc) apiDesc.textContent = langData.api_settings_description || "配置API连接参数";
+            if (apiKeyLabel) apiKeyLabel.textContent = langData.api_key_label || "API密钥";
+            if (apiEndpointLabel) apiEndpointLabel.textContent = langData.api_endpoint_label || "API端点";
+            if (cancelButton) cancelButton.textContent = langData.cancel_button || "取消";
+            if (saveButton) saveButton.textContent = langData.save_button || "保存设置";
+            if (apiKeyInput) apiKeyInput.placeholder = langData.api_key_placeholder ||
+                                  (lang === 'en' ? "Enter API Key" :
+                                   lang === 'hi' ? "एपीआई कुंजी दर्ज करें" : "请输入API密钥");
+            if (apiEndpointInput) apiEndpointInput.placeholder = langData.api_endpoint_placeholder ||
+                                     (lang === 'en' ? "Enter API Endpoint" :
+                                      lang === 'hi' ? "एपीआई एंडपॉइंट दर्ज करें" : "请输入API端点");
+
+            // 翻译系统消息（上下文标签）
+            translateMessages(lang);
+            showWelcomeMessage(lang);
+
+            // Update language button icon
+            const languageButton = document.getElementById('languageButton');
+            if (languageButton) {
+                if (lang === 'zh') languageButton.innerHTML = '<i class="fas fa-globe"></i>';
+                if (lang === 'en') languageButton.innerHTML = '<i class="fas fa-language"></i>';
+                if (lang === 'hi') languageButton.innerHTML = '<i class="fas fa-font"></i>';
+            }
+        }
+
+        function showWelcomeMessage(lang) {
+            const langData = translations[lang] || translations['zh'];
+
+            // Fallback for conversation_start
+            const contextText = langData.conversation_start ||
+                (lang === 'en' ? 'Conversation Start' :
+                 lang === 'hi' ? 'वार्तालाप शुरू' : '对话开始');
+
+            const welcomeHTML = `
+            <div class="message flex items-start space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <i class="fas fa-robot text-white"></i>
+                </div>
+                <div class="message-bubble ai-message">
+                    <div class="conversation-context" data-context-key="conversation_start">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        ${contextText}
+                    </div>
+                    <div class="space-y-3">
+                        <p class="font-semibold text-lg">${langData.welcome_title}</p>
+                        <p class="text-gray-700">${langData.welcome_description}</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-shopping-cart text-blue-500"></i>
+                                <span>${langData.service1}</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-image text-green-500"></i>
+                                <span>${langData.service2}</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-truck text-purple-500"></i>
+                                <span>${langData.service3}</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-headset text-orange-500"></i>
+                                <span>${langData.service4}</span>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 text-sm mt-3">${langData.welcome_footer}</p>
+                    </div>
+                </div>
+            </div>
+            `;
+            document.getElementById('welcomeMessage').innerHTML = welcomeHTML;
+        }
+
+        function getLanguageName(lang) {
+            switch(lang) {
+                case 'zh': return '中文';
+                case 'en': return 'English';
+                case 'hi': return 'हिंदी';
+                default: return '未知语言';
+            }
+        }
+
+        // 处理表单提交
+        document.getElementById('chatForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await sendMessage();
+        });
+
+        // 处理回车键
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // 字符计数
+        document.getElementById('messageInput').addEventListener('input', function() {
+            const count = this.value.length;
+            document.getElementById('charCount').textContent = count;
+            if (count > 450) {
+                document.getElementById('charCount').classList.add('text-red-500');
+            } else {
+                document.getElementById('charCount').classList.remove('text-red-500');
+            }
+        });
+
+        // 发送消息
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+
+            if (!message && !selectedImage) return;
+
+            // 添加用户消息
+            addMessage(message, 'user', selectedImage);
+
+            // 保存到对话历史
+            conversationHistory.push({
+                role: 'user',
+                content: message,
+                image: selectedImage ? 'image_uploaded' : null,
+                timestamp: new Date().toISOString()
+            });
+
+            // 更新对话计数
+            conversationCount++;
+            document.getElementById('conversationCount').textContent = `对话轮次: ${conversationCount}`;
+
+            // 清空输入
+            messageInput.value = '';
+            document.getElementById('charCount').textContent = '0';
+            removeImage();
+
+            // 显示加载指示器
+            showTypingIndicator();
+
+            try {
+                // 准备表单数据
+                const formData = new FormData();
+                formData.append('message', message);
+                if (selectedImage) {
+                    formData.append('image', selectedImage);
+                }
+                formData.append('language', getCurrentLanguage());
+
+                // 发送请求
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                // 隐藏加载指示器
+                hideTypingIndicator();
+
+                // 添加AI回复
+                if (result.success) {
+                    addMessage(result.answer, 'ai');
+
+                    // 保存AI回复到对话历史
+                    conversationHistory.push({
+                        role: 'assistant',
+                        content: result.answer,
+                        timestamp: new Date().toISOString()
+                    });
+
+                    // 如果API返回了新的语言设置，更新页面语言
+                    if (result.lang && result.lang !== getCurrentLanguage()) {
+                        setLanguage(result.lang);
+                    }
+                } else {
+                    addMessage('抱歉，处理您的问题时出现了错误，请稍后重试。', 'ai');
+                }
+
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage('网络连接错误，请检查网络后重试。', 'ai');
+                console.error('Error:', error);
+            }
+        }
+
+        // 添加消息到聊天区域（安全访问翻译键）
+        function addMessage(content, sender, image = null) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message flex items-start space-x-3';
+
+            // 安全获取当前语言助手回复文本
+            const langData = translations[getCurrentLanguage()] || translations['zh'];
+            const assistantReply = langData.assistant_reply || '助手回复';
+
+            if (sender === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="flex-1"></div>
+                    <div class="message-bubble user-message">
+                        ${image ? `<img src="${URL.createObjectURL(image)}" class="max-w-full h-auto rounded-lg mb-3 shadow-md" alt="用户图片">` : ''}
+                        <p class="whitespace-pre-wrap">${content}</p>
+                    </div>
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                        <i class="fas fa-user text-white"></i>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <div class="message-bubble ai-message">
+                        <div class="conversation-context" data-context-key="assistant_reply">
+                            <i class="fas fa-robot mr-1"></i>
+                            ${langData.assistant_reply || '助手回复'}
+                        </div>
+                        <p class="whitespace-pre-wrap">${content}</p>
+                    </div>
+                `;
+            }
+
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        // 显示加载指示器
+        function showTypingIndicator() {
+            const chatMessages = document.getElementById('chatMessages');
+            const indicator = document.createElement('div');
+            indicator.id = 'typingIndicator';
+            indicator.className = 'message flex items-start space-x-3 typing-indicator show';
+            indicator.innerHTML = `
+                <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <i class="fas fa-robot text-white"></i>
+                </div>
+                <div class="message-bubble ai-message">
+                    <div class="flex space-x-1">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(indicator);
+            scrollToBottom();
+        }
+
+        // 隐藏加载指示器
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        // 预览图片
+        function previewImage() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+
+            if (file) {
+                selectedImage = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('imageUploadArea').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 移除图片
+        function removeImage() {
+            selectedImage = null;
+            document.getElementById('imageInput').value = '';
+            document.getElementById('imageUploadArea').classList.add('hidden');
+        }
+
+        // 快速提问
+        function askQuestion(questionKey) {
+            const langData = translations[getCurrentLanguage()] || translations['zh'];
+            const question = langData[questionKey];
+            if (question) {
+                document.getElementById('messageInput').value = question;
+                sendMessage();
+            } else {
+                console.error(`Question key '${questionKey}' not found in language dictionary`);
+            }
+        }
+
+        // 清空聊天
+        async function clearChat() {
+            const langData = translations[getCurrentLanguage()] || translations['zh'];
+            if (confirm(langData.clear_confirm)) {
+                try {
+                    // 调用后端API清空对话历史
+                    const response = await fetch('/api/chat/clear', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('清空对话历史失败');
+                    }
+
+                    const result = await response.json();
+                    console.log('清空对话历史结果:', result);
+
+                    // 清空前端界面
+                    const chatMessages = document.getElementById('chatMessages');
+                    chatMessages.innerHTML = '';
+
+                    // 重置前端对话历史
+                    conversationHistory = [];
+                    conversationCount = 0;
+                    document.getElementById('conversationCount').textContent = langData.conversation_count + conversationCount;
+
+                    // 显示欢迎消息
+                    showWelcomeMessage(getCurrentLanguage());
+
+                    // 显示成功提示
+                    showNotification(langData.clear_success, 'success');
+
+                } catch (error) {
+                    console.error('清空对话历史失败:', error);
+                    showNotification(langData.clear_fail, 'error');
+                }
+            }
+        }
+
+        // 导出聊天记录
+        function exportChat() {
+            const langData = translations[getCurrentLanguage()] || translations['zh'];
+            if (conversationHistory.length === 0) {
+                alert(langData.no_export);
+                return;
+            }
+
+            const chatText = conversationHistory.map(msg => {
+                const time = new Date(msg.timestamp).toLocaleString();
+                const role = msg.role === 'user' ? langData.user_role : langData.assistant_role;
+                return `[${time}] ${role}: ${msg.content}`;
+            }).join('\n\n');
+
+            const blob = new Blob([chatText], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${langData.app_title}_${new Date().toISOString().slice(0, 10)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
+
+            // 根据类型设置样式
+            if (type === 'success') {
+                notification.className += ' bg-green-500 text-white';
+            } else if (type === 'error') {
+                notification.className += ' bg-red-500 text-white';
+            } else {
+                notification.className += ' bg-blue-500 text-white';
+            }
+
+            notification.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            // 添加到页面
+            document.body.appendChild(notification);
+
+            // 显示动画
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+
+            // 自动隐藏
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // 滚动到底部
+        function scrollToBottom() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 切换主题
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.querySelector('.fa-moon, .fa-sun');
+
+            // 切换深色主题类
+            body.classList.toggle('dark');
+
+            // 切换图标
+            if (icon) {
+                if (body.classList.contains('dark')) {
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                } else {
+                    icon.classList.remove('fa-sun');
+                    icon.classList.add('fa-moon');
+                }
+            }
+
+            // 保存主题偏好到本地存储
+            const isDark = body.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+
+            // 显示主题切换通知
+            const themeName = isDark ? '深色' : '浅色';
+            showNotification(`已切换到${themeName}主题`, 'info');
+        }
+
+        // 自动调整文本框高度
+        document.getElementById('messageInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 应用保存的主题偏好
+            const savedTheme = localStorage.getItem('theme');
+            const body = document.body;
+            const icon = document.querySelector('.fa-moon, .fa-sun');
+
+            if (savedTheme === 'dark') {
+                body.classList.add('dark');
+                if (icon) {
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                }
+            }
+
+            // 自动聚焦到输入框
+            document.getElementById('messageInput').focus();
+
+            // 更新UI文本并显示欢迎消息
+            updateUIText(getCurrentLanguage());
+            showWelcomeMessage(getCurrentLanguage());
+
+            // 添加一些交互效果
+            const quickQuestions = document.querySelectorAll('.quick-question');
+            quickQuestions.forEach(btn => {
+                btn.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-3px) scale(1.02)';
+                });
+                btn.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
