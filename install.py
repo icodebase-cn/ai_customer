@@ -89,7 +89,7 @@ def create_env_file():
     if not env_file.exists():
         print("📝 创建.env文件...")
         with open(env_file, 'w', encoding='utf-8') as f:
-            f.write("# OpenAI API配置\n")
+            f.write("# AI千集API配置\n")
             f.write("AIQIANJI_API_KEY=your_AIQIANJI_API_KEY_here\n")
             f.write("AIQIANJI_BASE_URL=https://aiqianji.cn/v1\n\n")
             f.write("# 系统配置\n")
@@ -99,7 +99,7 @@ def create_env_file():
             f.write("HOST=0.0.0.0\n")
             f.write("PORT=8000\n")
         print("✅ .env文件创建成功")
-        print("⚠️ 请编辑.env文件，添加您的OpenAI API密钥")
+        print("⚠️ 请编辑.env文件，添加您的AI千集API密钥")
     else:
         print("✅ .env文件已存在")
 
@@ -162,7 +162,7 @@ def main():
     if test_installation():
         print("\n🎉 安装完成！")
         print("\n📋 下一步:")
-        print("1. 编辑.env文件，添加您的OpenAI API密钥")
+        print("1. 编辑.env文件，添加您的AI千集API密钥")
         print("2. 运行: python run.py")
         print("3. 访问: http://localhost:8000")
         return True

@@ -7,7 +7,7 @@
 
 ### 🤖 智能对话
 - 支持文字和图片输入
-- 基于OpenAI GPT模型的智能回复
+- 基于AI千集模型/工作流的智能回复
 - 多模态AI处理（文字+图片）
 - 实时对话体验
 
@@ -454,7 +454,7 @@ curl -X POST "http://localhost:8000/api/knowledge/add" \
 ## 技术栈
 
 - **后端框架**：FastAPI
-- **AI模型**：OpenAI GPT-3.5/GPT-4
+- **AI模型**：AI千集开放平台支持的所有模型
 - **向量数据库**：FAISS
 - **文本嵌入**：Sentence Transformers
 - **前端**：HTML + Tailwind CSS + JavaScript
@@ -464,7 +464,7 @@ curl -X POST "http://localhost:8000/api/knowledge/add" \
 
 在 `config.py` 中可以调整以下配置：
 
-- OpenAI API设置
+- AI千集API设置
 - 模型参数
 - 知识库路径
 - 图片处理参数

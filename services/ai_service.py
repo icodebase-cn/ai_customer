@@ -98,7 +98,7 @@ class AIService:
                 conversation_context=conversation_context
             )
 
-            # 调用OpenAI API
+            # 调用AI千集API
             response = self.client.chat.completions.create(
                 model=self.config.TEXT_MODEL,
                 messages=[
@@ -377,7 +377,7 @@ class AIService:
                 {"role": "user", "content": full_question}
             ]
 
-            # 调用OpenAI API
+            # 调用AI千集API
             response = self.client.chat.completions.create(
                 model=self.config.TEXT_MODEL,
                 messages=messages,

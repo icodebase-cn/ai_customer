@@ -1,6 +1,8 @@
-# OpenAI API配置
+# AI千集API配置
 AIQIANJI_API_KEY=your_AIQIANJI_API_KEY_here
 AIQIANJI_BASE_URL=https://aiqianji.cn/v1
+TEXT_MODEL=qwen-plus
+VISION_MODEL=qwen2.5-vl-72b-instruct
 
 # 系统配置
 DEBUG=True

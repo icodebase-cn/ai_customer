@@ -162,7 +162,7 @@ def main():
 
     print("🚀 启动说明:")
     print("1. 确保已安装所有依赖: pip install -r requirements.txt")
-    print("2. 设置OpenAI API密钥: 创建.env文件")
+    print("2. 设置AI千集API密钥: 创建.env文件")
     print("3. 运行系统: python run.py")
     print("4. 访问Web界面: http://localhost:8000")
 
