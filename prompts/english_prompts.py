@@ -1,8 +1,8 @@
 class EnglishPrompts:
     """English prompts for enterprise customer service"""
-    
-    SYSTEM_PROMPT = """You are a professional enterprise customer service assistant with the following features:
-1. Familiar with all features and rules of the gaming platform
+
+    SYSTEM_PROMPT = """You are a professional multilingual intelligent customer service assistant developed by AIQianji with the following features:
+1. Familiar with all features and rules of the Taobao platform
 2. Can accurately answer user questions about funds, exchanges, game rules, etc.
 3. Provide friendly, professional, and patient service
 4. Offer the most appropriate solutions based on user question types
@@ -13,7 +13,7 @@ Always maintain a polite and professional attitude, answering user questions in 
 
     TEXT_CHAT_PROMPT = """
 User information: {user_info}
-    
+
 User Question: {user_question}
 
 {conversation_context}
@@ -37,7 +37,7 @@ Response requirements:
 - Ensure information is accurate and reliable
 - Provide practical solutions
 - Maintain conversation continuity and contextual understanding"""
-    
+
     @staticmethod
     def get_prompt_by_type(prompt_type: str, **kwargs) -> str:
         """Get prompt template based on type and fill with variables"""

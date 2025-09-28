@@ -1,6 +1,7 @@
 # 多语言智能客服系统
 
 一个基于AI的多语言智能客服系统，支持文字和图片输入，具备知识库管理和垂类提示词功能。
+![预览](./public/images/view.png)
 
 ## 功能特点
 
@@ -252,14 +253,17 @@ pip install -r requirements.txt
 
 大模型密钥的获取地址：https://aiqianji.cn
 
-[apikey](./public/images/apikey.png)
-[model](./public/images/model.png)
+申请APIKEY:
+![apikey](./public/images/apikey.png)
+
+选择可用模型：
+![model](./public/images/model.png)
 
 ```env
 AIQIANJI_API_KEY=your_AIQIANJI_API_KEY_here
 AIQIANJI_BASE_URL=https://aiqianji.cn/v1
 TEXT_MODEL=qwen-plus
-VISION_MODEL=qwen2.5-vl-72b
+VISION_MODEL=qwen2.5-vl-72b-instruct
 ```
 
 ### 4. 下载AI模型到本地（重要！）
@@ -366,6 +370,17 @@ C:\Users\[用户名]\.cache\huggingface\hub\models--sentence-transformers--parap
 2. 确保可以访问 huggingface.co
 3. 尝试使用VPN
 4. 手动下载模型文件
+5. 设置国内镜像
+
+**windows**
+```
+$env:HF_ENDPOINT="https://hf-mirror.com"
+```
+
+**linux**
+```
+export HF_ENDPOINT="https://hf-mirror.com"
+```
 
 **如果模型加载失败：**
 1. 检查模型文件是否完整

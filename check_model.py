@@ -7,20 +7,21 @@
 import os
 import sys
 
+
 def check_model_status():
     """检查模型状态"""
     print("🔍 检查AI模型状态...")
-    
+
     # 检查模型文件是否存在
     model_path = r"C:\Users\Lenovo\.cache\huggingface\hub\models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2\snapshots\86741b4e3f5cb7765a600d3a3d55a0f6a6cb443d"
-    
+
     if os.path.exists(model_path):
         print("✅ 模型文件存在")
-        
+
         # 检查关键文件
         key_files = ['model.safetensors', 'config.json', 'tokenizer.json']
         missing_files = []
-        
+
         for file in key_files:
             file_path = os.path.join(model_path, file)
             if os.path.exists(file_path):
@@ -29,7 +30,7 @@ def check_model_status():
             else:
                 missing_files.append(file)
                 print(f"❌ {file} - 缺失")
-        
+
         if missing_files:
             print(f"\n⚠️ 缺少文件: {', '.join(missing_files)}")
             return False
@@ -43,19 +44,19 @@ def check_model_status():
 def test_model_loading():
     """测试模型加载"""
     print("\n🧪 测试模型加载...")
-    
+
     try:
         from sentence_transformers import SentenceTransformer
-        
+
         # 设置环境变量
         os.environ['HF_HUB_OFFLINE'] = '1'
-        
-        model_path = r"C:\Users\Lenovo\.cache\huggingface\hub\models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2\snapshots\86741b4e3f5cb7765a600d3a3d55a0f6a6cb443d"
-        
+
+        model_path = r"C:\Users\frank\.cache\huggingface\hub\models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2\snapshots\86741b4e3f5cb7765a600d3a3d55a0f6a6cb443d"
+
         if os.path.exists(model_path):
             model = SentenceTransformer(model_path)
             print("✅ 模型加载成功")
-            
+
             # 简单测试
             test_text = ["测试文本"]
             embeddings = model.encode(test_text)
@@ -64,7 +65,7 @@ def test_model_loading():
         else:
             print("❌ 模型路径不存在")
             return False
-            
+
     except Exception as e:
         print(f"❌ 模型加载失败: {e}")
         return False
@@ -74,14 +75,14 @@ def main():
     print("=" * 50)
     print("🔍 AI模型状态检查")
     print("=" * 50)
-    
+
     # 检查文件状态
     files_ok = check_model_status()
-    
+
     if files_ok:
         # 测试加载
         loading_ok = test_model_loading()
-        
+
         if loading_ok:
             print("\n🎉 模型状态检查通过！")
             print("💡 可以正常启动系统了")
@@ -96,4 +97,4 @@ def main():
         print("💡 请下载模型: python download_model.py")
 
 if __name__ == "__main__":
-    main() 
+    main()    main()

@@ -110,14 +110,23 @@ async def chat(
         if image and image.content_type:
             # 验证图片格式
             if not image.content_type.startswith('image/'):
-                raise HTTPException(status_code=400, detail="只支持图片文件")
+                print(f"❌ 不支持的图片类型: {image.content_type}")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"只支持以下图片格式: {', '.join(Config.SUPPORTED_IMAGE_FORMATS)}"
+                )
 
             # 读取图片数据
             image_data = await image.read()
+            print(f"📊 图片大小: {len(image_data)/1024:.2f}KB")
 
             # 验证图片大小
             if len(image_data) > Config.MAX_IMAGE_SIZE:
-                raise HTTPException(status_code=400, detail="图片文件过大")
+                print(f"❌ 图片大小超过限制: {len(image_data)} > {Config.MAX_IMAGE_SIZE}")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"图片文件过大 (最大 {Config.MAX_IMAGE_SIZE/1024/1024:.1f}MB)"
+                )
 
         # 调用AI服务
         service = get_ai_service()
@@ -141,7 +150,6 @@ async def chat(
             lang=language,
             user_info=user_info
         )
-
         # 添加语言标识到响应中，供前端更新页面语言
         response['lang'] = language
         return response

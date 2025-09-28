@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 import openai
 from PIL import Image
 
-from config import Config
+from config import Config  # 确保Config可用
 from prompts.chinese_prompts import ChinesePrompts
 from prompts.english_prompts import EnglishPrompts
 from prompts.hindi_prompts import HindiPrompts
@@ -29,9 +29,7 @@ class AIService:
         print(f"✅ 使用API: {self.config.TEXT_MODEL}")
         self.client = openai.OpenAI(
             api_key=self.config.AIQIANJI_API_KEY,
-            base_url=self.config.AIQIANJI_BASE_URL,
-            model=self.config.TEXT_MODEL,
-            extra_body={"chat_template_kwargs": {"thinking": False}}
+            base_url=self.config.AIQIANJI_BASE_URL
         )
 
         print("📚 初始化知识库...")
@@ -108,7 +106,8 @@ class AIService:
                     {"role": "user", "content": prompt}
                 ],
                 max_tokens=self.config.MAX_TOKENS,
-                temperature=self.config.TEMPERATURE
+                temperature=self.config.TEMPERATURE,
+                extra_body={"chat_template_kwargs": {"thinking": False}}
             )
 
             answer = response.choices[0].message.content
@@ -138,15 +137,41 @@ class AIService:
         """处理图片查询"""
         try:
             # 处理图片
-            image = Image.open(io.BytesIO(image_data))
+            try:
+                image = Image.open(io.BytesIO(image_data))
+                if image.format.lower() not in [fmt.strip('.') for fmt in Config.SUPPORTED_IMAGE_FORMATS]:
+                    raise ValueError(f"不支持的图片格式: {image.format}")
+            except Exception as e:
+                print(f"❌ 图片处理失败: {str(e)}")
+                return {
+                    "success": False,
+                    "error": f"图片处理失败: {str(e)}",
+                    "answer": "抱歉，无法处理您上传的图片，请检查图片格式是否正确"
+                }
 
             # 压缩图片以符合API要求
-            image = self._resize_image(image)
+            try:
+                image = self._resize_image(image)
+            except Exception as e:
+                print(f"❌ 图片压缩失败: {str(e)}")
+                return {
+                    "success": False,
+                    "error": f"图片压缩失败: {str(e)}",
+                    "answer": "抱歉，处理图片时出现错误"
+                }
 
             # 转换为base64
-            buffered = io.BytesIO()
-            image.save(buffered, format="JPEG")
-            img_base64 = base64.b64encode(buffered.getvalue()).decode()
+            try:
+                buffered = io.BytesIO()
+                image.save(buffered, format="JPEG" if image.format.lower() in ['jpg', 'jpeg'] else image.format)
+                img_base64 = base64.b64encode(buffered.getvalue()).decode()
+            except Exception as e:
+                print(f"❌ 图片编码失败: {str(e)}")
+                return {
+                    "success": False,
+                    "error": f"图片编码失败: {str(e)}",
+                    "answer": "抱歉，处理图片时出现错误"
+                }
 
             # 从知识库获取相关上下文
             knowledge_context = self.knowledge_base.get_context_for_query(user_question)
@@ -316,7 +341,8 @@ class AIService:
                     {"role": "user", "content": chat_prompt}
                 ],
                 max_tokens=2,
-                temperature=0.0
+                temperature=0.0,
+                extra_body={"chat_template_kwargs": {"thinking": False}}
             )
 
             answer = response.choices[0].message.content.strip()
@@ -587,8 +613,7 @@ class AIService:
                     max_tokens=self.config.MAX_TOKENS,
                     temperature=self.config.TEMPERATURE
                 )
-
-                answer = response.choices[0].message.content
+                answer = response.choices[0].message.content[0]["text"]
 
                 # 添加到对话历史
                 self.add_to_conversation_history("user", f"{user_question} [图片]", image_data)
@@ -629,6 +654,7 @@ class AIService:
                     }
 
             except Exception as e:
+                print(f"API connection error, { e}")
                 return {
                     "success": False,
                     "error": str(e),

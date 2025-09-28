@@ -1015,6 +1015,7 @@
             // 清空输入
             messageInput.value = '';
             document.getElementById('charCount').textContent = '0';
+            const imageToSend = selectedImage;
             removeImage();
 
             // 显示加载指示器
@@ -1024,8 +1025,8 @@
                 // 准备表单数据
                 const formData = new FormData();
                 formData.append('message', message);
-                if (selectedImage) {
-                    formData.append('image', selectedImage);
+                if (imageToSend) {
+                    formData.append('image', imageToSend, imageToSend.name);
                 }
                 formData.append('language', getCurrentLanguage());
 
